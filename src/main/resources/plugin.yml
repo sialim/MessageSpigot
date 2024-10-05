@@ -1,0 +1,8 @@
+name: MessageSpigot
+version: '${project.version}'
+main: me.sialim.messagespigot.MessageSpigot
+api-version: '1.21'
+depend: [PlaceholderAPI]
+commands:
+  messagespigot:
+    usage: /messagespigot reload

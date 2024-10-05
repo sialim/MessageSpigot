@@ -1,0 +1,14 @@
+interval: 20
+messages:
+  - message1:
+      - '#ff0000line1 of message &a1'
+      - '#ffffffline2 of message &a1'
+  - message2:
+      - '#ff0000line1 of message &a2'
+      - '#ffffffline2 of message &a2'
+  - message3:
+      - '#ff0000line1 of message &a3'
+      - '#ffffffline2 of message &a3'
+  - message4:
+      - '#ff0000line1 of message &a4'
+      - '#ffffffline2 of message &a4'
