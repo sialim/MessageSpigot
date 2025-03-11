@@ -10,11 +10,9 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -23,38 +21,53 @@ public final class MessageSpigot extends JavaPlugin implements TabExecutor {
     private int interval;
     private int lastIndex = -1;
     private Random random;
+    private BukkitTask messageTask;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
         loadConfig();
         random = new Random();
+        startMessageTask();
 
         getCommand("messagespigot").setExecutor(this);
         getCommand("messagespigot").setTabCompleter(this);
+    }
+    private void loadConfig() {
+        FileConfiguration config = getConfig();
+        interval = config.getInt("interval", 20);
 
-        new BukkitRunnable() {
+        messages = new ArrayList<>();
+        List<String> rawMessages = config.getStringList("messages");
+
+        if (rawMessages == null || rawMessages.isEmpty()) {
+            getLogger().warning("No messages found in the config!");
+        } else {
+            for (String msg : rawMessages) {
+                messages.add(Collections.singletonList(msg));
+            }
+            getLogger().info("Loaded " + messages.size() + " messages.");
+        }
+    }
+
+    private void startMessageTask() {
+        if (messageTask != null) {
+            messageTask.cancel();
+        }
+
+        messageTask = new BukkitRunnable() {
             @Override public void run() {
                 broadcastRandomMessage();
             }
         }.runTaskTimer(this, 0, interval * 20L);
     }
 
-    private void loadConfig() {
-        FileConfiguration config = getConfig();
-        interval = config.getInt("interval", 20);
-
-        messages = new ArrayList<>();
-        config.getMapList("messages").forEach(map -> {
-            for (Object key : map.keySet()) {
-                List<String> messageLines = (List<String>) map.get(key);
-                messages.add(messageLines);
-            }
-        });
-    }
-
     private void broadcastRandomMessage() {
         int randomIndex;
+        if (messages == null || messages.isEmpty()) {
+            getLogger().warning("No messages found in the config!");
+            return;
+        }
         do {
             randomIndex = random.nextInt(messages.size());
         } while (randomIndex == lastIndex);
@@ -93,9 +106,9 @@ public final class MessageSpigot extends JavaPlugin implements TabExecutor {
         if (sender.isOp()) {
             if (command.getName().equalsIgnoreCase("messagespigot") && args.length > 0) {
                 if (args[0].equalsIgnoreCase("reload")) {
-                    saveConfig();
                     reloadConfig();
                     loadConfig();
+                    startMessageTask();
                     sender.sendMessage(ChatColor.GREEN + "MessageSpigot config reloaded successfully.");
                     return true;
                 }
